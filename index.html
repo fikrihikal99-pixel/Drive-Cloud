@@ -2,70 +2,441 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Cloud Storage SDN CILUAR 1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Berbagi SDN Ciluar 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-        .container { border: 1px solid #ccc; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; }
-        input, button { margin-top: 15px; padding: 10px; width: 100%; box-sizing: border-box; }
+        body {
+            box-sizing: border-box;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .upload-zone {
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone.dragover {
+            border-color: #667eea;
+            background-color: #f7fafc;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 min-h-full">
+    <!-- Header -->
+     <header class="gradient-bg text-white shadow-lg">
+  <div class="container mx-auto px-6 py-10 text-center flex flex-col items-center justify-center space-y-4">
+    <div class="bg-white rounded-full p-2 shadow-lg flex items-center justify-center overflow-hidden" style="width: 128px; height: 128px;">
+      <img 
+        src="https://drive.google.com/uc?export=view&id=1UOC0u0rTtFSA5FFlTpObzeayTQ5YfsBk" 
+        alt="Logo SDN Ciluar 1"
+        class="w-full h-full object-cover">
+    </div>
+    <h1 class="text-4xl font-bold mt-3">Berbagi SDN Ciluar 1</h1>
+    <p class="text-blue-100 text-lg">Platform Berbagi File Sekolah</p>
+  </div>
+</header>
 
-<div class="container">
-    <h2>Cloud SDN CILUAR 1 ☁️</h2>
-    <p>Silakan unggah dokumen tugas atau modul di sini.</p>
-    
-    <form id="uploadForm">
-        <input type="file" id="fileInput" required>
-        <button type="submit" id="uploadBtn">Unggah File</button>
-    </form>
-    
-    <p id="status"></p>
-</div>
+    <div class="container mx-auto px-6 py-8">
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-lg shadow-md mb-8">
+            <div class="flex border-b">
+                <button id="folderTab" class="flex-1 py-4 px-6 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50">
+                    <i class="fas fa-folder mr-2"></i>
+                    Kelola Folder
+                </button>
+                <button id="uploadTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-upload mr-2"></i>
+                    Upload File
+                </button>
+                <button id="browseTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-search mr-2"></i>
+                    Jelajahi File
+                </button>
+            </div>
+        </div>
 
-<script>
-    const form = document.getElementById('uploadForm');
-    const statusText = document.getElementById('status');
+        <!-- Folder Management Section -->
+        <div id="folderSection" class="fade-in">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-folder-plus mr-2 text-blue-600"></i>
+                    Buat Folder Baru
+                </h2>
+                <div class="flex gap-4">
+                    <input type="text" id="folderName" placeholder="Nama folder baru..." 
+                           class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button onclick="createNewFolder()" 
+                            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                        <i class="fas fa-plus mr-2"></i>
+                        Buat Folder
+                    </button>
+                </div>
+            </div>
 
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const file = document.getElementById('fileInput').files[0];
-        if (!file) return;
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-folder mr-2 text-yellow-600"></i>
+                    Daftar Folder
+                </h2>
+                <div id="folderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Folders will be loaded here -->
+                </div>
+            </div>
+        </div>
 
-        statusText.innerText = "Sedang mengunggah... Mohon tunggu.";
-        
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            // Mengubah file menjadi format teks Base64 agar bisa dikirim
-            const base64 = event.target.result.split('base64,')[1];
-            
-            // GANTI URL DI BAWAH INI DENGAN WEB APP URL DARI LANGKAH 2
-            const scriptUrl = 'https://script.google.com/macros/s/AKfycby1f9ueG_I5uWFliRqlJKoK9pTl__w6qcgoHtbt0wn2-8PjdfMVZjWJ-A5W5DYV5LZwlQ/exec';
-            
-            const formData = new URLSearchParams();
-            formData.append('filename', file.name);
-            formData.append('mimetype', file.type);
-            formData.append('data', base64);
+        <!-- Upload Section -->
+        <div id="uploadSection" class="hidden">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-cloud-upload-alt mr-2 text-green-600"></i>
+                    Upload File
+                </h2>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Folder Tujuan:</label>
+                    <select id="targetFolder" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">-- Pilih Folder --</option>
+                    </select>
+                </div>
 
-            fetch(scriptUrl, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                if(result.status === 'success'){
-                    statusText.innerHTML = "✅ Berhasil! <br> <a href='" + result.url + "' target='_blank'>Lihat File</a>";
-                } else {
-                    statusText.innerText = "❌ Gagal: " + result.message;
-                }
-            })
-            .catch(error => {
-                statusText.innerText = "❌ Terjadi kesalahan jaringan.";
+                <div class="upload-zone rounded-lg p-8 text-center" id="uploadZone">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-lg text-gray-600 mb-2">Drag & drop file di sini atau</p>
+                    <input type="file" id="fileInput" class="hidden" multiple>
+                    <button onclick="document.getElementById('fileInput').click()" 
+                            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        <i class="fas fa-file-plus mr-2"></i>
+                        Pilih File
+                    </button>
+                </div>
+
+                <div id="uploadProgress" class="hidden mt-4">
+                    <div class="bg-gray-200 rounded-full h-2">
+                        <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="uploadStatus" class="text-sm text-gray-600 mt-2">Mengupload...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Browse Section -->
+        <div id="browseSection" class="hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-files mr-2 text-purple-600"></i>
+                    Jelajahi File
+                </h2>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Folder:</label>
+                    <select id="browseFolder" onchange="loadFiles()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">-- Pilih Folder --</option>
+                    </select>
+                </div>
+
+                <div id="fileList" class="space-y-3">
+                    <!-- Files will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span id="toastMessage">Berhasil!</span>
+        </div>
+    </div>
+
+    <script>
+        let folders = [];
+        let currentTab = 'folder';
+
+        // Tab switching
+        document.getElementById('folderTab').addEventListener('click', () => switchTab('folder'));
+        document.getElementById('uploadTab').addEventListener('click', () => switchTab('upload'));
+        document.getElementById('browseTab').addEventListener('click', () => switchTab('browse'));
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('[id$="Tab"]').forEach(btn => {
+                btn.className = btn.className.replace('text-blue-600 border-b-2 border-blue-600 bg-blue-50', 'text-gray-500 hover:text-blue-600');
             });
-        };
-        reader.readAsDataURL(file);
-    });
-</script>
+            
+            document.getElementById(tab + 'Tab').className = document.getElementById(tab + 'Tab').className.replace('text-gray-500 hover:text-blue-600', 'text-blue-600 border-b-2 border-blue-600 bg-blue-50');
 
-</body>
+            // Show/hide sections
+            document.getElementById('folderSection').classList.toggle('hidden', tab !== 'folder');
+            document.getElementById('uploadSection').classList.toggle('hidden', tab !== 'upload');
+            document.getElementById('browseSection').classList.toggle('hidden', tab !== 'browse');
+
+            currentTab = tab;
+            
+            if (tab === 'upload' || tab === 'browse') {
+                loadFoldersForSelect();
+            }
+        }
+
+        // Load folders on page load
+        window.onload = function() {
+            loadFolders();
+        };
+
+        function loadFolders() {
+            google.script.run
+                .withSuccessHandler(displayFolders)
+                .withFailureHandler(showError)
+                .getFolders();
+        }
+
+        function displayFolders(folderList) {
+            folders = folderList;
+            const container = document.getElementById('folderList');
+            
+            if (folderList.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <i class="fas fa-folder-open text-4xl mb-4"></i>
+                        <p>Belum ada folder. Buat folder pertama Anda!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = folderList.map(folder => `
+                <div class="card-hover bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-lg border border-blue-200">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-folder text-2xl text-blue-600 mr-3"></i>
+                        <h3 class="font-semibold text-gray-800 truncate">${folder.name}</h3>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openFolder('${folder.id}')" 
+                                class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-external-link-alt mr-1"></i>
+                            Buka
+                        </button>
+                        <button onclick="copyFolderId('${folder.id}')" 
+                                class="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadFoldersForSelect() {
+            const uploadSelect = document.getElementById('targetFolder');
+            const browseSelect = document.getElementById('browseFolder');
+            
+            const options = folders.map(folder => 
+                `<option value="${folder.id}">${folder.name}</option>`
+            ).join('');
+            
+            uploadSelect.innerHTML = '<option value="">-- Pilih Folder --</option>' + options;
+            browseSelect.innerHTML = '<option value="">-- Pilih Folder --</option>' + options;
+        }
+
+        function createNewFolder() {
+            const name = document.getElementById('folderName').value.trim();
+            if (!name) {
+                showToast('Masukkan nama folder!', 'error');
+                return;
+            }
+
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    showToast('Folder berhasil dibuat!');
+                    document.getElementById('folderName').value = '';
+                    loadFolders();
+                })
+                .withFailureHandler(showError)
+                .createFolder(name);
+        }
+
+        // File upload handling
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            const folderId = document.getElementById('targetFolder').value;
+            if (!folderId) {
+                showToast('Pilih folder tujuan terlebih dahulu!', 'error');
+                return;
+            }
+
+            Array.from(files).forEach(file => uploadFile(file, folderId));
+        }
+
+        function uploadFile(file, folderId) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = e.target.result.split(',')[1]; // Remove data:type;base64,
+                
+                showUploadProgress();
+                
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        hideUploadProgress();
+                        if (result.status === 'success') {
+                            showToast(result.message);
+                        } else {
+                            showToast(result.message, 'error');
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        hideUploadProgress();
+                        showError(error);
+                    })
+                    .uploadFileToFolder(data, file.name, file.type, folderId);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showUploadProgress() {
+            document.getElementById('uploadProgress').classList.remove('hidden');
+            // Simulate progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                document.getElementById('progressBar').style.width = progress + '%';
+                if (progress >= 90) clearInterval(interval);
+            }, 200);
+        }
+
+        function hideUploadProgress() {
+            document.getElementById('uploadProgress').classList.add('hidden');
+            document.getElementById('progressBar').style.width = '0%';
+        }
+
+        function loadFiles() {
+            const folderId = document.getElementById('browseFolder').value;
+            if (!folderId) {
+                document.getElementById('fileList').innerHTML = '';
+                return;
+            }
+
+            google.script.run
+                .withSuccessHandler(displayFiles)
+                .withFailureHandler(showError)
+                .getFiles(folderId);
+        }
+
+        function displayFiles(files) {
+            const container = document.getElementById('fileList');
+            
+            if (files.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-file-alt text-4xl mb-4"></i>
+                        <p>Folder ini masih kosong</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = files.map(file => `
+                <div class="card-hover bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas fa-file-alt text-2xl text-gray-600 mr-4"></i>
+                        <div>
+                            <h4 class="font-medium text-gray-800">${file.name}</h4>
+                            <p class="text-sm text-gray-500">${new Date(file.date).toLocaleDateString('id-ID')}</p>
+                        </div>
+                    </div>
+                    <a href="${file.url}" target="_blank" 
+                       class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-external-link-alt mr-2"></i>
+                        Buka
+                    </a>
+                </div>
+            `).join('');
+        }
+
+        function openFolder(folderId) {
+            window.open(`https://drive.google.com/drive/folders/${folderId}`, '_blank');
+        }
+
+        function copyFolderId(folderId) {
+            navigator.clipboard.writeText(folderId).then(() => {
+                showToast('ID folder berhasil disalin!');
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toast.className = toast.className.replace(/bg-\w+-500/, type === 'error' ? 'bg-red-500' : 'bg-green-500');
+            toastMessage.textContent = message;
+            
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        function showError(error) {
+            showToast('Terjadi kesalahan: ' + error.toString(), 'error');
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b39be0c4245e29',t:'MTc1OTkwNTIyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
