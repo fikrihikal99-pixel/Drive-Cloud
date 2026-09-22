@@ -1,1 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Cloud Storage SDN CILUAR 1</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .container { border: 1px solid #ccc; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; }
+        input, button { margin-top: 15px; padding: 10px; width: 100%; box-sizing: border-box; }
+    </style>
+</head>
+<body>
 
+<div class="container">
+    <h2>Cloud SDN CILUAR 1 ☁️</h2>
+    <p>Silakan unggah dokumen tugas atau modul di sini.</p>
+    
+    <form id="uploadForm">
+        <input type="file" id="fileInput" required>
+        <button type="submit" id="uploadBtn">Unggah File</button>
+    </form>
+    
+    <p id="status"></p>
+</div>
+
+<script>
+    const form = document.getElementById('uploadForm');
+    const statusText = document.getElementById('status');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const file = document.getElementById('fileInput').files[0];
+        if (!file) return;
+
+        statusText.innerText = "Sedang mengunggah... Mohon tunggu.";
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            // Mengubah file menjadi format teks Base64 agar bisa dikirim
+            const base64 = event.target.result.split('base64,')[1];
+            
+            // GANTI URL DI BAWAH INI DENGAN WEB APP URL DARI LANGKAH 2
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycby1f9ueG_I5uWFliRqlJKoK9pTl__w6qcgoHtbt0wn2-8PjdfMVZjWJ-A5W5DYV5LZwlQ/exec';
+            
+            const formData = new URLSearchParams();
+            formData.append('filename', file.name);
+            formData.append('mimetype', file.type);
+            formData.append('data', base64);
+
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result.status === 'success'){
+                    statusText.innerHTML = "✅ Berhasil! <br> <a href='" + result.url + "' target='_blank'>Lihat File</a>";
+                } else {
+                    statusText.innerText = "❌ Gagal: " + result.message;
+                }
+            })
+            .catch(error => {
+                statusText.innerText = "❌ Terjadi kesalahan jaringan.";
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+</script>
+
+</body>
+</html>
