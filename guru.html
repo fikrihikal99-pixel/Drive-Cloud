@@ -20,10 +20,8 @@
 </head>
 <body class="bg-[#f6f3eb] min-h-screen flex flex-col md:flex-row p-3 md:p-4 gap-4 text-gray-800 overflow-x-hidden">
 
-    <!-- SIDEBAR (Responsif: Di atas untuk HP, di kiri untuk Laptop) -->
     <aside class="w-full md:w-72 bg-white md:bg-transparent rounded-2xl md:rounded-none p-4 md:p-0 flex flex-col justify-between shadow-sm md:shadow-none shrink-0">
         <div>
-            <!-- Logo & Judul -->
             <div class="flex items-center justify-between md:justify-start gap-3 mb-4 md:mb-8 px-1">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
@@ -34,11 +32,9 @@
                         <p class="text-[11px] text-gray-600">Pustaka Digital Guru</p>
                     </div>
                 </div>
-                <!-- Tombol Keluar khusus versi Mobile di atas -->
                 <button onclick="logout()" class="md:hidden text-red-500 p-2 text-sm"><i class="fa-solid fa-power-off"></i></button>
             </div>
 
-            <!-- Profil Pengguna -->
             <div class="bg-[#efead9] p-3 rounded-xl mb-4 hidden md:flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <img src="https://ui-avatars.com/api/?name=Sri+Wahyuni&background=f97316&color=fff" class="w-9 h-9 rounded-full">
@@ -50,7 +46,6 @@
                 <button onclick="logout()" title="Keluar" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-power-off"></i></button>
             </div>
 
-            <!-- Menu Navigasi (Bisa digeser horizontal di HP jika menu banyak) -->
             <nav class="flex md:flex-col gap-1 overflow-x-auto pb-2 md:pb-0 mb-2">
                 <a href="#" onclick="loadFiles('all')" class="flex items-center gap-2 md:gap-3 bg-teal-600 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium shrink-0"><i class="fa-solid fa-house w-4"></i> Dashboard</a>
                 <a href="#" onclick="loadFiles('getAdministrasi')" class="flex items-center gap-2 md:gap-3 hover:bg-[#efead9] text-gray-700 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm transition shrink-0"><i class="fa-solid fa-folder w-4"></i> Administrasi</a>
@@ -59,17 +54,13 @@
         </div>
     </aside>
 
-    <!-- MAIN CONTENT AREA -->
     <main class="flex-1 bg-white rounded-2xl md:rounded-3xl shadow-sm p-4 md:p-8 flex flex-col overflow-hidden min-h-[75vh] md:min-h-auto">
-        
-        <!-- Header & Tombol Aksi (Ditata bertumpuk di HP agar tidak terpotong) -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div>
                 <h1 class="text-xl md:text-3xl font-bold text-gray-800">Halo, <span id="salamNama">Guru</span>!</h1>
                 <p class="text-xs md:text-sm text-gray-600">Kelola file pembelajaran SDN Ciluar 1 dengan mudah.</p>
             </div>
             
-            <!-- Tombol Buat Folder & Unggah File (Full width di HP agar nyaman ditekan jari) -->
             <div class="flex items-center gap-2 w-full md:w-auto">
                 <button onclick="buatFolderBaru()" class="flex-1 md:flex-none bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-folder-plus"></i> Folder Baru
@@ -81,18 +72,15 @@
             </div>
         </div>
 
-        <!-- Status Proses / Upload -->
         <div id="uploadStatus" class="hidden mb-4 p-3 bg-blue-50 text-blue-700 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2">
             <i class="fa-solid fa-spinner fa-spin"></i> <span id="statusText">Sedang memproses...</span>
         </div>
 
-        <!-- Daftar File & Folder -->
         <div class="flex justify-between items-center mb-3">
             <h3 class="text-sm md:text-lg font-bold text-gray-800">Daftar File & Folder Drive</h3>
             <span class="text-xs text-gray-400">Sinkronisasi Otomatis</span>
         </div>
 
-        <!-- Grid File: 1 kolom di HP, 3 kolom di Laptop/PC -->
         <div id="fileContainer" class="grid grid-cols-1 md:grid-cols-3 gap-3 overflow-y-auto pb-4 pr-1">
             <div class="col-span-full text-center py-12 text-gray-400 text-sm">
                 <i class="fa-solid fa-spinner fa-spin text-xl mb-2"></i>
@@ -104,7 +92,6 @@
     <script>
         const SCRIPT_URL = 'MASUKKAN_URL_WEB_APP_APPS_SCRIPT_ANDA';
         
-        // Set Nama Pengguna
         const namaUser = localStorage.getItem("userName") || "Guru";
         if(document.getElementById('namaGuruLaptop')) document.getElementById('namaGuruLaptop').innerText = namaUser;
         document.getElementById('salamNama').innerText = namaUser;
@@ -203,7 +190,7 @@
                 .then(res => res.json())
                 .then(result => {
                     statusDiv.classList.add('hidden');
-                    fileInput.value = ''; // Reset input
+                    fileInput.value = '';
                     if(result.status === "Sukses") {
                         alert("File berhasil diunggah ke Google Drive!");
                         loadFiles('all');
