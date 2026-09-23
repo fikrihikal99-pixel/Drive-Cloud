@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Pustaka Digital SDN Ciluar 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#f6f3eb] h-screen flex items-center justify-center p-4">
 
+    <div class="bg-white p-8 rounded-3xl shadow-sm w-full max-w-md">
+        <div class="flex flex-col items-center mb-8">
+            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-3xl shadow-md mb-4">
+                <i class="fa-solid fa-school"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 text-center">SDN Ciluar 1</h1>
+            <p class="text-sm text-gray-500">Cloud Storage Sekolah</p>
+        </div>
+
+        <form id="loginForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <div class="relative">
+                    <i class="fa-regular fa-user absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="username" required class="w-full pl-10 pr-4 py-3 bg-[#f9f9f9] border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500" placeholder="admin atau guru">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
+                <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="password" id="password" required class="w-full pl-10 pr-4 py-3 bg-[#f9f9f9] border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500" placeholder="••••••••">
+                </div>
+            </div>
+            
+            <div id="errorMessage" class="hidden text-red-500 text-xs text-center font-bold"></div>
+
+            <button type="submit" id="btnSubmit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition shadow-sm mt-4">
+                Masuk
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'MASUKKAN_URL_WEB_APP_APPS_SCRIPT_ANDA';
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const btn = document.getElementById('btnSubmit');
+            const errorDiv = document.getElementById('errorMessage');
+            
+            btn.innerText = "Memeriksa...";
+            errorDiv.classList.add('hidden');
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'login');
+            formData.append('username', user);
+            formData.append('password', pass);
+
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(result => {
+                if(result.status === "Sukses") {
+                    localStorage.setItem("userRole", result.role);
+                    localStorage.setItem("userName", result.nama);
+                    
+                    if(result.role === "admin") {
+                        window.location.href = "admin.html";
+                    } else {
+                        window.location.href = "guru.html";
+                    }
+                } else {
+                    errorDiv.innerText = result.pesan;
+                    errorDiv.classList.remove('hidden');
+                    btn.innerText = "Masuk";
+                }
+            })
+            .catch(() => {
+                errorDiv.innerText = "Gagal terhubung ke server.";
+                errorDiv.classList.remove('hidden');
+                btn.innerText = "Masuk";
+            });
+        });
+    </script>
+</body>
+</html>
