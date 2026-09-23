@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - SDN Ciluar 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        if(localStorage.getItem("userRole") !== "admin") {
+            alert("Akses ditolak! Khusus Admin.");
+            window.location.href = "index.html";
+        }
+        function logout() { localStorage.clear(); window.location.href = "index.html"; }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#f6f3eb] min-h-screen flex flex-col md:flex-row p-3 md:p-4 gap-4 text-gray-800">
+
+    <aside class="w-full md:w-72 bg-white md:bg-transparent rounded-2xl md:rounded-none p-4 md:p-0 flex flex-col justify-between shadow-sm md:shadow-none shrink-0">
+        <div>
+            <div class="flex items-center justify-between md:justify-start gap-3 mb-4 md:mb-8 px-1">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base md:text-lg leading-tight">Admin Panel</h1>
+                        <p class="text-[11px] text-gray-600">SDN Ciluar 1 Cloud</p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="md:hidden text-red-500 p-2 text-sm"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+
+            <div class="bg-[#efead9] p-3 rounded-xl mb-4 hidden md:flex items-center justify-between">
+                <div>
+                    <h2 class="font-bold text-xs">Administrator</h2>
+                    <span class="text-[9px] bg-slate-800 text-white px-2 py-0.5 rounded-full">ADMIN</span>
+                </div>
+                <button onclick="logout()" title="Keluar" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+
+            <nav class="flex md:flex-col gap-1">
+                <a href="#" class="flex items-center gap-2 md:gap-3 bg-slate-800 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium"><i class="fa-solid fa-users w-4"></i> Kelola Pengguna</a>
+            </nav>
+        </div>
+    </aside>
+
+    <main class="flex-1 bg-white rounded-2xl md:rounded-3xl shadow-sm p-4 md:p-8 flex flex-col overflow-hidden min-h-[75vh] md:min-h-auto">
+        <h1 class="text-xl md:text-2xl font-bold mb-1">Manajemen Akun Guru</h1>
+        <p class="text-xs text-gray-500 mb-6">Kelola akses akun untuk pengajar di SDN Ciluar 1.</p>
+
+        <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6 text-xs md:text-sm text-blue-800 flex items-center gap-3">
+            <i class="fa-solid fa-circle-info text-lg shrink-0"></i>
+            <div>Sistem login menggunakan kredensial sederhana. Akun default guru: <b>guru</b> (Pass: <b>guru123</b>) dan admin: <b>admin</b> (Pass: <b>admin123</b>).</div>
+        </div>
+
+        <div class="border border-gray-200 rounded-xl overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs md:text-sm">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-200 text-gray-600">
+                        <th class="p-3 md:p-4 font-bold">Nama Guru</th>
+                        <th class="p-3 md:p-4 font-bold">Username</th>
+                        <th class="p-3 md:p-4 font-bold">Peran</th>
+                        <th class="p-3 md:p-4 font-bold">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b border-gray-100">
+                        <td class="p-3 md:p-4 font-semibold">Ibu Sri Wahyuni</td>
+                        <td class="p-3 md:p-4 text-gray-500">guru</td>
+                        <td class="p-3 md:p-4"><span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded text-[10px] md:text-xs">Guru Kelas</span></td>
+                        <td class="p-3 md:p-4"><span class="text-green-600 font-bold text-xs">● Aktif</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+</html>
