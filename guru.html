@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Guru - SDN Ciluar 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        if(localStorage.getItem("userRole") !== "guru") {
+            alert("Akses ditolak! Silakan login terlebih dahulu.");
+            window.location.href = "index.html";
+        }
+        function logout() { localStorage.clear(); window.location.href = "index.html"; }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#f6f3eb] h-screen flex p-4 overflow-hidden text-gray-800">
+
+    <!-- SIDEBAR -->
+    <aside class="w-72 flex flex-col h-full pr-6 overflow-y-auto">
+        <div class="flex items-center gap-3 mb-8 px-2">
+            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">
+                <i class="fa-solid fa-school"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">SDN Ciluar 1</h1>
+                <p class="text-xs text-gray-600">Pustaka Digital Guru</p>
+            </div>
+        </div>
+
+        <div class="bg-[#efead9] p-4 rounded-xl mb-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="https://ui-avatars.com/api/?name=Sri+Wahyuni&background=f97316&color=fff" class="w-10 h-10 rounded-full">
+                <div>
+                    <h2 class="font-bold text-xs" id="namaGuru">Ibu Sri</h2>
+                    <span class="text-[9px] bg-teal-600 text-white px-2 py-0.5 rounded-full">GURU</span>
+                </div>
+            </div>
+            <button onclick="logout()" title="Keluar" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+
+        <nav class="space-y-1 mb-6">
+            <a href="#" onclick="loadFiles('all')" class="flex items-center gap-3 bg-teal-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium"><i class="fa-solid fa-house w-5"></i> Dashboard</a>
+            <a href="#" onclick="loadFiles('getAdministrasi')" class="flex items-center gap-3 hover:bg-[#efead9] text-gray-700 px-4 py-2.5 rounded-lg text-sm transition"><i class="fa-solid fa-folder w-5"></i> Administrasi Sekolah</a>
+            <a href="#" onclick="loadFiles('getBankSoal')" class="flex items-center gap-3 hover:bg-[#efead9] text-gray-700 px-4 py-2.5 rounded-lg text-sm transition"><i class="fa-solid fa-folder w-5"></i> Bank Soal</a>
+        </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 bg-white rounded-3xl shadow-sm p-8 flex flex-col h-full overflow-hidden">
+        <div class="flex justify-between items-start mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Halo, <span id="salamNama">Guru</span>!</h1>
+                <p class="text-gray-600">Selamat Datang di Cloud Storage SDN Ciluar 1.</p>
+            </div>
+            <div class="flex gap-3">
+                <!-- Tombol Buat Folder Baru -->
+                <button onclick="buatFolderBaru()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-2xl text-sm font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-folder-plus"></i> Buat Folder
+                </button>
+                <!-- Tombol Unggah File -->
+                <button onclick="document.getElementById('fileInput').click()" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-3 rounded-2xl text-sm font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i> Unggah File
+                </button>
+                <input type="file" id="fileInput" class="hidden" onchange="uploadFile()">
+            </div>
+        </div>
+
+        <div id="uploadStatus" class="hidden mb-4 p-3 bg-blue-50 text-blue-700 rounded-lg text-sm">Sedang memproses...</div>
+
+        <h3 class="text-lg font-bold mb-4">Daftar File & Folder</h3>
+        <div id="fileContainer" class="grid grid-cols-3 gap-4 overflow-y-auto pb-4">
+            <div class="col-span-3 text-center py-10 text-gray-400">Memuat data...</div>
+        </div>
+    </main>
+
+    <script>
+        const SCRIPT_URL = 'MASUKKAN_URL_WEB_APP_APPS_SCRIPT_ANDA';
+        document.getElementById('namaGuru').innerText = localStorage.getItem("userName");
+        document.getElementById('salamNama').innerText = localStorage.getItem("userName");
+
+        function loadFiles(actionParam = 'all') {
+            const container = document.getElementById('fileContainer');
+            container.innerHTML = '<div class="col-span-3 text-center py-10 text-gray-400">Memuat data...</div>';
+
+            fetch(`${SCRIPT_URL}?action=${actionParam}`)
+            .then(res => res.json())
+            .then(res => {
+                if(res.status !== "Sukses" || res.data.length === 0) {
+                    container.innerHTML = '<div class="col-span-3 text-center py-10 text-gray-400">Belum ada file atau folder di sini.</div>';
+                    return;
+                }
+                let html = '';
+                res.data.forEach(item => {
+                    let isFolder = item.tipe === 'folder';
+                    let iconClass = isFolder ? 'fa-folder text-amber-500' : 'fa-file text-blue-500';
+                    let bgClass = isFolder ? 'bg-amber-50' : 'bg-blue-50';
+                    let sizeText = isFolder ? 'Folder' : (item.ukuran / (1024*1024)).toFixed(2) + ' MB';
+
+                    html += `
+                    <div class="border border-gray-200 rounded-xl p-4 flex flex-col justify-between bg-white shadow-sm hover:shadow-md transition">
+                        <div class="flex items-start gap-3 mb-4">
+                            <div class="w-10 h-10 ${bgClass} rounded-lg flex items-center justify-center text-xl">
+                                <i class="fa-solid ${iconClass}"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="font-bold text-sm text-gray-800 truncate" title="${item.nama}">${item.nama}</h4>
+                                <p class="text-xs text-gray-500">${sizeText} • ${item.tanggal}</p>
+                            </div>
+                        </div>
+                        <a href="${item.url}" target="_blank" class="text-center bg-gray-100 hover:bg-teal-50 hover:text-teal-600 text-xs font-bold py-2 rounded-lg transition">Buka di Drive</a>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            });
+        }
+
+        function buatFolderBaru() {
+            const namaFolder = prompt("Masukkan nama folder baru:");
+            if (!namaFolder) return;
+
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerText = `Membuat folder "${namaFolder}"...`;
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'buatFolder');
+            formData.append('namaFolder', namaFolder);
+
+            fetch(SCRIPT_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(result => {
+                statusDiv.classList.add('hidden');
+                if(result.status === "Sukses") {
+                    alert("Folder berhasil dibuat!");
+                    loadFiles('all');
+                } else {
+                    alert("Gagal membuat folder.");
+                }
+            })
+            .catch(() => {
+                statusDiv.classList.add('hidden');
+                alert("Terjadi kesalahan jaringan.");
+            });
+        }
+
+        function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if(!file) return;
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerText = `Sedang mengunggah ${file.name}...`;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result.split(',')[1];
+                const formData = new URLSearchParams();
+                formData.append('action', 'upload');
+                formData.append('fileData', base64);
+                formData.append('mimeType', file.type);
+                formData.append('fileName', file.name);
+
+                fetch(SCRIPT_URL, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(result => {
+                    statusDiv.classList.add('hidden');
+                    if(result.status === "Sukses") {
+                        alert("File berhasil diunggah!");
+                        loadFiles('all');
+                    } else {
+                        alert("Gagal unggah file.");
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => loadFiles('all'));
+    </script>
+</body>
+</html>
