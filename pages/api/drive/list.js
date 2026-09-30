@@ -15,7 +15,7 @@ async function handler(req, res) {
 
     const result = await drive.files.list({
       q: query,
-      fields: "files(id, name, mimeType, size, modifiedTime, iconLink, webViewLink)",
+      fields: "files(id, name, mimeType, size, modifiedTime, iconLink, webViewLink, thumbnailLink)",
       orderBy: "folder,name_natural",
       pageSize: 200,
     });
