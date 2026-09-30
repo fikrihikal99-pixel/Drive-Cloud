@@ -96,3 +96,182 @@ input:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 
 ::-webkit-scrollbar { height: 8px; width: 8px; }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+
+/* ---------- Layout: app shell ---------- */
+.app-shell {
+  display: flex;
+  min-height: 100%;
+  height: 100%;
+  background: var(--paper);
+}
+
+.sidebar {
+  width: 220px;
+  background: var(--navy);
+  color: white;
+  padding: 24px 16px;
+  padding-top: calc(24px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.mobile-topbar {
+  display: none;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+.main {
+  flex: 1;
+  padding: 24px 28px;
+  min-width: 0;
+}
+
+.fab-upload {
+  display: none;
+}
+
+/* ---------- Mobile (<= 768px) ---------- */
+@media (max-width: 768px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--navy);
+    color: white;
+    padding: 14px 16px;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .mobile-topbar button {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: white;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .mobile-topbar .brand-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    color: white;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 78%;
+    max-width: 280px;
+    z-index: 50;
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+    box-shadow: 8px 0 24px rgba(0,0,0,0.25);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay.open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 40;
+  }
+
+  .main {
+    padding: 16px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .controls {
+    width: 100%;
+  }
+
+  .search-input {
+    flex: 1;
+    width: auto !important;
+  }
+
+  .grid-files {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .fab-upload {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 18px;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--green);
+    color: white;
+    border: none;
+    font-size: 1.6rem;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    z-index: 35;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .modal-overlay {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .modal-box {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    height: 100%;
+    border-radius: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  table.files-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Bigger, easier tap targets everywhere on touch */
+@media (max-width: 768px) {
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn {
+    min-height: 44px;
+  }
+}
