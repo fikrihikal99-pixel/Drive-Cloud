@@ -44,6 +44,7 @@ export default function Home() {
   const [dragOver, setDragOver] = useState(false);
   const [theme, setTheme] = useState("light");
   const [preview, setPreview] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const fileInput = useRef(null);
 
   const currentFolder = stack[stack.length - 1];
@@ -79,11 +80,13 @@ export default function Home() {
 
   function openFolder(f) {
     setQuery("");
+    setDrawerOpen(false);
     setStack((s) => [...s, { id: f.id, name: f.name }]);
   }
 
   function goToCrumb(idx) {
     setQuery("");
+    setDrawerOpen(false);
     setStack((s) => s.slice(0, idx + 1));
   }
 
@@ -169,8 +172,18 @@ export default function Home() {
   return (
     <>
       <Head><title>Arsip Sekolah Ciluar 1</title></Head>
-      <div data-theme={theme} style={styles.shell}>
-        <aside style={styles.sidebar}>
+      <div data-theme={theme} className="app-shell">
+        <div className="mobile-topbar">
+          <button onClick={() => setDrawerOpen(true)} aria-label="Buka menu">☰</button>
+          <span className="brand-title">Arsip Sekolah</span>
+        </div>
+
+        <div
+          className={`sidebar-overlay ${drawerOpen ? "open" : ""}`}
+          onClick={() => setDrawerOpen(false)}
+        />
+
+        <aside className={`sidebar ${drawerOpen ? "open" : ""}`}>
           <div style={styles.brand}>
             <div style={styles.logoDot} />
             <div>
@@ -179,10 +192,18 @@ export default function Home() {
             </div>
           </div>
 
-          <button className="btn btn-accent" style={styles.uploadBtn} onClick={() => fileInput.current?.click()}>
+          <button
+            className="btn btn-accent desktop-only"
+            style={styles.uploadBtn}
+            onClick={() => fileInput.current?.click()}
+          >
             + Unggah file
           </button>
-          <button className="btn btn-ghost" style={styles.sideBtn} onClick={createFolder}>
+          <button
+            className="btn btn-ghost"
+            style={styles.sideBtn}
+            onClick={() => { createFolder(); setDrawerOpen(false); }}
+          >
             Buat folder
           </button>
           <input
@@ -190,7 +211,7 @@ export default function Home() {
             type="file"
             multiple
             style={{ display: "none" }}
-            onChange={(e) => handleFiles(e.target.files)}
+            onChange={(e) => { handleFiles(e.target.files); setDrawerOpen(false); }}
           />
 
           <div style={styles.sideFooter}>
@@ -207,8 +228,16 @@ export default function Home() {
           </div>
         </aside>
 
-        <main style={styles.main}>
-          <div style={styles.topbar}>
+        <button
+          className="fab-upload"
+          aria-label="Unggah file"
+          onClick={() => fileInput.current?.click()}
+        >
+          +
+        </button>
+
+        <main className="main">
+          <div className="topbar" style={styles.topbar}>
             <div style={styles.crumbs}>
               {stack.map((s, idx) => (
                 <span key={idx}>
@@ -217,9 +246,10 @@ export default function Home() {
                 </span>
               ))}
             </div>
-            <div style={styles.controls}>
+            <div className="controls" style={styles.controls}>
               <input
                 type="text"
+                className="search-input"
                 placeholder="Cari dokumen…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -262,7 +292,7 @@ export default function Home() {
                 {query ? "Tidak ada dokumen yang cocok." : "Folder ini masih kosong. Tarik file ke sini atau klik Unggah file."}
               </div>
             ) : view === "grid" ? (
-              <div style={styles.grid}>
+              <div className="grid-files" style={styles.grid}>
                 {files.map((f) => (
                   <div key={f.id} className="card" style={styles.card}>
                     <div
@@ -275,16 +305,16 @@ export default function Home() {
                     </div>
                     <div style={styles.cardActions}>
                       {!isFolder(f) && (
-                        <a href={`/api/drive/download?fileId=${f.id}`} style={styles.iconBtn} title="Unduh">⬇</a>
+                        <a className="icon-btn" href={`/api/drive/download?fileId=${f.id}`} style={styles.iconBtn} title="Unduh">⬇</a>
                       )}
-                      <button style={styles.iconBtn} title="Ganti nama" onClick={() => renameItem(f)}>✎</button>
-                      <button style={styles.iconBtn} title="Hapus" onClick={() => deleteItem(f)}>🗑</button>
+                      <button className="icon-btn" style={styles.iconBtn} title="Ganti nama" onClick={() => renameItem(f)}>✎</button>
+                      <button className="icon-btn" style={styles.iconBtn} title="Hapus" onClick={() => deleteItem(f)}>🗑</button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <table style={styles.table}>
+              <table className="files-table" style={styles.table}>
                 <thead>
                   <tr style={styles.tr}>
                     <th style={styles.th}>Nama</th>
@@ -306,10 +336,10 @@ export default function Home() {
                       <td style={styles.td}>{f.modifiedTime ? new Date(f.modifiedTime).toLocaleDateString("id-ID") : "—"}</td>
                       <td style={{ ...styles.td, textAlign: "right" }}>
                         {!isFolder(f) && (
-                          <a href={`/api/drive/download?fileId=${f.id}`} style={styles.iconBtn} title="Unduh">⬇</a>
+                          <a className="icon-btn" href={`/api/drive/download?fileId=${f.id}`} style={styles.iconBtn} title="Unduh">⬇</a>
                         )}
-                        <button style={styles.iconBtn} title="Ganti nama" onClick={() => renameItem(f)}>✎</button>
-                        <button style={styles.iconBtn} title="Hapus" onClick={() => deleteItem(f)}>🗑</button>
+                        <button className="icon-btn" style={styles.iconBtn} title="Ganti nama" onClick={() => renameItem(f)}>✎</button>
+                        <button className="icon-btn" style={styles.iconBtn} title="Hapus" onClick={() => deleteItem(f)}>🗑</button>
                       </td>
                     </tr>
                   ))}
@@ -321,11 +351,11 @@ export default function Home() {
       </div>
 
       {preview && (
-        <div style={styles.modalBg} onClick={() => setPreview(null)}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" style={styles.modalBg} onClick={() => setPreview(null)}>
+          <div className="modal-box" style={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <span>{preview.name}</span>
-              <button onClick={() => setPreview(null)} style={styles.iconBtn}>✕</button>
+              <button className="icon-btn" onClick={() => setPreview(null)} style={styles.iconBtn}>✕</button>
             </div>
             {preview.mimeType?.includes("image") ? (
               <img src={`/api/drive/download?fileId=${preview.id}`} alt={preview.name} style={styles.previewImg} />
