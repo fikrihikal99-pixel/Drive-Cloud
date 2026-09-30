@@ -26,6 +26,7 @@ function iconFor(f) {
   if (isFolder(f)) return "📁";
   if (f.mimeType?.includes("pdf")) return "📕";
   if (f.mimeType?.includes("image")) return "🖼️";
+  if (f.mimeType?.includes("video")) return "🎬";
   if (f.mimeType?.includes("word") || f.mimeType?.includes("document")) return "📄";
   if (f.mimeType?.includes("sheet") || f.mimeType?.includes("excel")) return "📊";
   return "🗂️";
@@ -167,7 +168,8 @@ export default function Home() {
     router.push("/login");
   }
 
-  const canPreview = (f) => f.mimeType?.includes("pdf") || f.mimeType?.includes("image");
+  const canPreview = (f) =>
+    f.mimeType?.includes("pdf") || f.mimeType?.includes("image") || f.mimeType?.includes("video");
 
   return (
     <>
@@ -299,7 +301,14 @@ export default function Home() {
                       style={styles.cardMain}
                       onClick={() => (isFolder(f) ? openFolder(f) : canPreview(f) ? setPreview(f) : null)}
                     >
-                      <div style={styles.cardIcon}>{iconFor(f)}</div>
+                      {f.thumbnailLink && !isFolder(f) ? (
+                        <div style={styles.thumbWrap}>
+                          <img src={f.thumbnailLink} alt={f.name} style={styles.thumbImg} loading="lazy" />
+                          {f.mimeType?.includes("video") && <span style={styles.playBadge}>▶</span>}
+                        </div>
+                      ) : (
+                        <div style={styles.cardIcon}>{iconFor(f)}</div>
+                      )}
                       <div style={styles.cardName} title={f.name}>{f.name}</div>
                       {!isFolder(f) && <div style={styles.cardMeta}>{formatSize(f.size)}</div>}
                     </div>
@@ -358,9 +367,16 @@ export default function Home() {
               <button className="icon-btn" onClick={() => setPreview(null)} style={styles.iconBtn}>✕</button>
             </div>
             {preview.mimeType?.includes("image") ? (
-              <img src={`/api/drive/download?fileId=${preview.id}`} alt={preview.name} style={styles.previewImg} />
+              <img src={`/api/drive/view?fileId=${preview.id}`} alt={preview.name} style={styles.previewImg} />
+            ) : preview.mimeType?.includes("video") ? (
+              <video
+                src={`/api/drive/view?fileId=${preview.id}`}
+                controls
+                autoPlay
+                style={styles.previewVideo}
+              />
             ) : (
-              <iframe src={`/api/drive/download?fileId=${preview.id}`} style={styles.previewFrame} title={preview.name} />
+              <iframe src={`/api/drive/view?fileId=${preview.id}`} style={styles.previewFrame} title={preview.name} />
             )}
           </div>
         </div>
@@ -400,6 +416,9 @@ const styles = {
   card: { padding: 14, display: "flex", flexDirection: "column", gap: 8 },
   cardMain: { cursor: "pointer" },
   cardIcon: { fontSize: 30 },
+  thumbWrap: { position: "relative", width: "100%", height: 90, borderRadius: 8, overflow: "hidden", background: "var(--paper)" },
+  thumbImg: { width: "100%", height: "100%", objectFit: "cover", display: "block" },
+  playBadge: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.25)", color: "white", fontSize: "1.4rem" },
   cardName: { fontSize: "0.88rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
   cardMeta: { fontSize: "0.75rem", color: "var(--ink-soft)" },
   cardActions: { display: "flex", gap: 6, borderTop: "1px solid var(--line)", paddingTop: 8 },
@@ -412,5 +431,6 @@ const styles = {
   modal: { background: "var(--card)", borderRadius: 14, width: "100%", maxWidth: 800, maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column" },
   modalHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid var(--line)", fontWeight: 500 },
   previewImg: { width: "100%", height: "auto", maxHeight: "75vh", objectFit: "contain" },
+  previewVideo: { width: "100%", maxHeight: "75vh", background: "black" },
   previewFrame: { width: "100%", height: "75vh", border: "none" },
 };
