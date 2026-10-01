@@ -18,6 +18,20 @@ function formatSize(bytes) {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function formatRelative(dateStr) {
+  if (!dateStr) return "—";
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const min = Math.round(diffMs / 60000);
+  if (min < 1) return "Baru saja";
+  if (min < 60) return `${min} menit lalu`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr} jam lalu`;
+  const day = Math.round(hr / 24);
+  if (day === 1) return "Kemarin";
+  if (day < 7) return `${day} hari lalu`;
+  return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+}
+
 function isFolder(f) {
   return f.mimeType === "application/vnd.google-apps.folder";
 }
@@ -40,6 +54,8 @@ export default function Home() {
   const [stack, setStack] = useState([{ id: null, name: "Beranda" }]);
   const [view, setView] = useState("grid");
   const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortDir, setSortDir] = useState("asc");
   const [uploading, setUploading] = useState(false);
   const [uploadPct, setUploadPct] = useState(0);
   const [dragOver, setDragOver] = useState(false);
@@ -192,6 +208,31 @@ export default function Home() {
     router.push("/login");
   }
 
+  const sortedFiles = (() => {
+    const folders = files.filter(isFolder).sort((a, b) => a.name.localeCompare(b.name, "id"));
+    const rest = files.filter((f) => !isFolder(f));
+    const dir = sortDir === "asc" ? 1 : -1;
+    rest.sort((a, b) => {
+      switch (sortBy) {
+        case "size":
+          return ((Number(a.size) || 0) - (Number(b.size) || 0)) * dir;
+        case "type":
+          return (a.mimeType || "").localeCompare(b.mimeType || "") * dir;
+        case "modified":
+          return (new Date(a.modifiedTime || 0) - new Date(b.modifiedTime || 0)) * dir;
+        case "name":
+        default:
+          return a.name.localeCompare(b.name, "id") * dir;
+      }
+    });
+    return [...folders, ...rest];
+  })();
+
+  const recentFiles = [...files]
+    .filter((f) => !isFolder(f))
+    .sort((a, b) => new Date(b.modifiedTime || 0) - new Date(a.modifiedTime || 0))
+    .slice(0, 6);
+
   const canPreview = (f) =>
     f.mimeType?.includes("pdf") || f.mimeType?.includes("image") || f.mimeType?.includes("video");
 
@@ -281,6 +322,24 @@ export default function Home() {
                 onChange={(e) => setQuery(e.target.value)}
                 style={styles.search}
               />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                style={styles.sortSelect}
+                title="Urutkan berdasarkan"
+              >
+                <option value="name">Nama</option>
+                <option value="size">Ukuran</option>
+                <option value="type">Jenis file</option>
+                <option value="modified">Tanggal diubah</option>
+              </select>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")}
+                title={sortDir === "asc" ? "Menaik (A-Z / kecil-besar)" : "Menurun (Z-A / besar-kecil)"}
+              >
+                {sortDir === "asc" ? "↑" : "↓"}
+              </button>
               <button
                 className="btn btn-ghost"
                 onClick={() => setView(view === "grid" ? "list" : "grid")}
@@ -290,6 +349,26 @@ export default function Home() {
               </button>
             </div>
           </div>
+
+          {!query && recentFiles.length > 0 && (
+            <div style={styles.recentSection}>
+              <div style={styles.recentLabel}>File terbaru</div>
+              <div style={styles.recentRow}>
+                {recentFiles.map((f) => (
+                  <button
+                    key={f.id}
+                    style={styles.recentCard}
+                    onClick={() => (canPreview(f) ? setPreview(f) : null)}
+                    title={f.name}
+                  >
+                    <span style={styles.recentIcon}>{iconFor(f)}</span>
+                    <span style={styles.recentName}>{f.name}</span>
+                    <span style={styles.recentTime}>{formatRelative(f.modifiedTime)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {uploading && (
             <div style={styles.progressWrap}>
@@ -312,14 +391,14 @@ export default function Home() {
           >
             {loading ? (
               <div style={styles.emptyState}>Memuat…</div>
-            ) : files.length === 0 ? (
+            ) : sortedFiles.length === 0 ? (
               <div style={styles.emptyState}>
                 <div style={{ fontSize: 40, marginBottom: 8 }}>🗂️</div>
                 {query ? "Tidak ada dokumen yang cocok." : "Folder ini masih kosong. Tarik file ke sini atau klik Unggah file."}
               </div>
             ) : view === "grid" ? (
               <div className="grid-files" style={styles.grid}>
-                {files.map((f) => (
+                {sortedFiles.map((f) => (
                   <div key={f.id} className="card" style={styles.card}>
                     <div
                       style={styles.cardMain}
@@ -357,7 +436,7 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {files.map((f) => (
+                  {sortedFiles.map((f) => (
                     <tr key={f.id} style={styles.tr}>
                       <td
                         style={{ ...styles.td, cursor: "pointer" }}
@@ -426,8 +505,22 @@ const styles = {
   topbar: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 18 },
   crumbs: { fontSize: "0.95rem" },
   crumbBtn: { background: "none", border: "none", color: "var(--navy)", fontWeight: 600, padding: 0, fontSize: "0.95rem" },
-  controls: { display: "flex", gap: 10 },
+  controls: { display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" },
   search: { width: 220 },
+  sortSelect: {
+    padding: "9px 10px", borderRadius: "var(--radius)", border: "1px solid var(--line)",
+    background: "var(--card)", color: "var(--ink)", fontSize: "0.88rem",
+  },
+  recentSection: { marginBottom: 18 },
+  recentLabel: { fontSize: "0.8rem", fontWeight: 600, color: "var(--ink-soft)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.03em" },
+  recentRow: { display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 },
+  recentCard: {
+    flexShrink: 0, width: 150, textAlign: "left", background: "var(--card)", border: "1px solid var(--line)",
+    borderRadius: 10, padding: "10px 12px", cursor: "pointer", display: "flex", flexDirection: "column", gap: 4,
+  },
+  recentIcon: { fontSize: 20 },
+  recentName: { fontSize: "0.82rem", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  recentTime: { fontSize: "0.72rem", color: "var(--ink-soft)" },
   progressWrap: { position: "relative", height: 8, background: "var(--line)", borderRadius: 6, marginBottom: 14, overflow: "hidden" },
   progressBar: { position: "absolute", top: 0, left: 0, height: "100%", background: "var(--green)", transition: "width 0.2s" },
   progressLabel: { position: "absolute", top: 12, left: 0, fontSize: "0.8rem", color: "var(--ink-soft)" },
