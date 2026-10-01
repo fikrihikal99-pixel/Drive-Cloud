@@ -91,38 +91,62 @@ export default function Home() {
     setStack((s) => s.slice(0, idx + 1));
   }
 
+  // Upload langsung dari browser ke Google Drive (lewat sesi resumable),
+  // supaya tidak terbentur batas ukuran permintaan di server (Vercel: 4.5 MB).
+  async function uploadOneFile(file, folderId, onProgress) {
+    const initRes = await fetch("/api/drive/upload-init", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: file.name,
+        mimeType: file.type || "application/octet-stream",
+        size: file.size,
+        folderId: folderId || undefined,
+      }),
+    });
+    const initData = await initRes.json();
+    if (!initRes.ok) throw new Error(initData.error || `Gagal memulai upload "${file.name}"`);
+
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", initData.uploadUrl);
+      xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(e.loaded / e.total);
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`Upload "${file.name}" gagal (${xhr.status})`));
+      };
+      xhr.onerror = () => reject(new Error(`Upload "${file.name}" gagal — periksa koneksi internet`));
+      xhr.send(file);
+    });
+  }
+
   async function handleFiles(fileList) {
     const list = Array.from(fileList);
     if (list.length === 0) return;
     setUploading(true);
-    setUploadPct(10);
-    try {
-      const form = new FormData();
-      list.forEach((f) => form.append("file", f));
-      if (currentFolder.id) form.append("folderId", currentFolder.id);
+    setUploadPct(0);
 
-      await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/api/drive/upload");
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setUploadPct(Math.round((e.loaded / e.total) * 100));
-        };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else reject(new Error(JSON.parse(xhr.responseText || "{}").error || "Upload gagal"));
-        };
-        xhr.onerror = () => reject(new Error("Upload gagal"));
-        xhr.send(form);
-      });
-
-      await load(currentFolder.id, query);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setUploading(false);
-      setUploadPct(0);
-      if (fileInput.current) fileInput.current.value = "";
+    const failed = [];
+    for (let i = 0; i < list.length; i++) {
+      const file = list[i];
+      try {
+        await uploadOneFile(file, currentFolder.id, (frac) => {
+          const overall = ((i + frac) / list.length) * 100;
+          setUploadPct(Math.round(overall));
+        });
+      } catch (e) {
+        failed.push(e.message);
+      }
     }
+
+    if (failed.length) setError(failed.join(" • "));
+    await load(currentFolder.id, query);
+    setUploading(false);
+    setUploadPct(0);
+    if (fileInput.current) fileInput.current.value = "";
   }
 
   async function createFolder() {
